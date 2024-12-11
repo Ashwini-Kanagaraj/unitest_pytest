@@ -34,4 +34,5 @@ jobs:
     - name: Run pytest
       env:
         PYTHONPATH: ./src
-      run: pytest tests
+      run: pytest tests --import-mode=append
+
