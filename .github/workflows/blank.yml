@@ -1,0 +1,47 @@
+name: Deploy Flask App to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # Step 1: Checkout code from the repository
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Step 2: Set up SSH keys to access EC2
+    - name: Set up SSH key
+      uses: webfactory/ssh-agent@v0.5.3
+      with:
+        ssh-private-key: ${{ secrets.EC2_KEY }}
+
+    # Step 3: Install dependencies (if necessary, here using Python)
+    - name: Set up Python environment
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+
+    - name: Install Flask and dependencies
+      run: |
+        pip install -r requirements.txt  # Adjust if you have a `requirements.txt`
+
+    # Step 4: Copy files to EC2
+    - name: Copy files to EC2
+      run: |
+        scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r . ec2-user@${{ secrets.EC2_HOST }}:/home/ec2-user/unitest_pytest/
+
+    # Step 5: SSH into EC2 and restart the application using Gunicorn
+    - name: SSH into EC2 and restart Flask app
+      run: |
+        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ec2-user@${{ secrets.EC2_HOST }} << 'EOF'
+          cd /home/ec2-user/unitest_pytest/
+          # Install dependencies on EC2 (if necessary)
+          pip3 install -r requirements.txt
+          # Restart Gunicorn to apply the latest changes
+          sudo systemctl restart gunicorn
+        EOF
