@@ -1,5 +1,5 @@
 import unittest
-from main import add_numbers  # Directly import from the same directory
+from src.main import add_numbers
 
 class TestMain(unittest.TestCase):
     def test_add_numbers(self):
